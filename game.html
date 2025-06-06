@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planet2050 - Sustainability Survival Game</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0fdf4;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    nav {
+      background-color: #2e7d32;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      padding: 1rem 0;
+    }
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 0 1rem;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+    nav a:hover {
+      color: #c8e6c9;
+    }
+    .container {
+      max-width: 800px;
+      margin: auto;
+      padding: 2rem;
+    }
+    h1 {
+      text-align: center;
+      color: #2e7d32;
+    }
+    .scenario-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-bottom: 1rem;
+    }
+    .year {
+      font-weight: bold;
+      color: #1b5e20;
+    }
+    .choice-button {
+      display: block;
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 1rem;
+      background-color: #a5d6a7;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .choice-button:hover {
+      background-color: #81c784;
+    }
+    #scoreboard {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-bottom: 2rem;
+    }
+    #log {
+      white-space: pre-wrap;
+      font-size: 0.95rem;
+      color: #555;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="HowToPlay.html">How to Play</a>
+    <a href="game.html">Play the Game!</a>
+    <a href="aboutsustainability.html">About Sustainability</a>
+    <a href="contactus.html">About Us</a>
+  </nav>
+
+  <div class="container">
+    <h1>🌍 Planet2050</h1>
+    <div id="scoreboard">
+      🌿 Sustainability: <span id="score">50</span> | 👥 Approval: <span id="approval">50</span> | 💰 Economy: <span id="money">50</span>
+    </div>
+
+    <div class="scenario-box">
+      <div class="year" id="year">Year: 2025</div>
+      <p id="prompt">You will have to choose from buttons A,B,C or D for your random scenerio. Each time it starts on a random situation.</p>
+      <button class="choice-button" onclick="selectChoice('a')">A</button>
+      <button class="choice-button" onclick="selectChoice('b')">B</button>
+      <button class="choice-button" onclick="selectChoice('c')">C</button>
+      <button class="choice-button" onclick="selectChoice('d')">D</button>
+    </div>
+
+    <div id="log"></div>
+  </div>
+
+  <script>
+    let score = 50;
+    let approval = 50;
+    let money = 50;
+    let year = 2025;
+    const MAX_YEAR = 2075;
+
+    const prompts = [
+      "A tech company offers to build a data center using fossil fuels.",
+      "A developer proposes to clear urban forest for condos.",
+      "Electric scooter sharing expands citywide.",
+      "Air quality reaches hazardous levels for the third week in a row.",
+      "Drought forces emergency water conservation rules.",
+      "A tidal energy pilot project seeks government support.",
+      "Massive algae bloom shuts down local fisheries.",
+      "Public demand rises for low-carbon school lunches.",
+      "High-speed rail investment opportunity appears.",
+      "Citizens call for a ban on single-use plastics at events."
+    ];
+
+    const choiceSet = {
+      a: { text: "Accept without changes 🏗️", score: -10, approval: -5, money: +10 },
+      b: { text: "Reject and draft green alternatives 📄", score: +8, approval: +4, money: -5 },
+      c: { text: "Run public consultations 🗣️", score: +4, approval: +2, money: -2 },
+      d: { text: "Delay decision for economic review 💰", score: -3, approval: -1, money: +3 }
+    };
+
+    const scenarios = Array.from({ length: MAX_YEAR - 2025 + 1 }, (_, i) => {
+      const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+      return {
+        prompt: `Scenario #${i + 1}: ${prompt}`,
+        choices: JSON.parse(JSON.stringify(choiceSet))
+      };
+    });
+
+    function updateScenario() {
+      const index = year - 2025;
+      const scenario = scenarios[index];
+      document.getElementById("year").textContent = `Year: ${year}`;
+      document.getElementById("prompt").textContent = scenario.prompt;
+      document.querySelectorAll(".choice-button").forEach((btn, i) => {
+        const key = ["a", "b", "c", "d"][i];
+        btn.textContent = `${key.toUpperCase()}) ${scenario.choices[key].text}`;
+      });
+    }
+
+    function selectChoice(option) {
+      const index = year - 2025;
+      const scenario = scenarios[index];
+      const choice = scenario.choices[option];
+      score += choice.score;
+      approval += choice.approval;
+      money += choice.money;
+
+      document.getElementById('score').textContent = score;
+      document.getElementById('approval').textContent = approval;
+      document.getElementById('money').textContent = money;
+
+      const log = document.getElementById('log');
+      log.textContent += `\n📅 ${year} - Choice ${option.toUpperCase()}: ${choice.text} → 🌿 ${choice.score}, 👥 ${choice.approval}, 💰 ${choice.money}`;
+
+      const crisis = maybeCrisis();
+      if (crisis) {
+        log.textContent += `\n🚨 Crisis Event: ${crisis.name} – ${crisis.message}`;
+        score += crisis.effect.sustainability;
+        approval += crisis.effect.approval;
+        money += crisis.effect.money;
+        log.textContent += `\nImpact → 🌿 ${crisis.effect.sustainability}, 👥 ${crisis.effect.approval}, 💰 ${crisis.effect.money}`;
+      }
+
+      const weather = maybeWeather();
+      if (weather) {
+        log.textContent += `\n⛅ Weather Update: ${weather.type} – ${weather.message}`;
+        score += weather.score_mod;
+        approval += weather.approval_mod;
+        money += weather.money_mod;
+        log.textContent += `\nImpact → 🌿 ${weather.score_mod}, 👥 ${weather.approval_mod}, 💰 ${weather.money_mod}`;
+      }
+
+      year++;
+
+      if (score <= 0 || approval <= 0 || money <= 0) {
+        endGame(false);
+      } else if (year <= MAX_YEAR) {
+        updateScenario();
+      } else {
+        endGame(true);
+      }
+    }
+
+    function maybeCrisis() {
+      if (Math.random() < 0.3) {
+        const crises = [
+          { name: "Wildfire 🔥", message: "A wildfire has damaged forested areas and homes.", effect: { sustainability: -5, approval: -10, money: -8 } },
+          { name: "Climate Protest 🚸", message: "Youth-led protests call for bolder climate action.", effect: { sustainability: 0, approval: -5, money: -2 } },
+          { name: "Innovation Boom ⚡", message: "A startup invents breakthrough solar tech!", effect: { sustainability: +8, approval: +5, money: +10 } },
+          { name: "Severe Drought 💧", message: "Reservoirs are drying up due to heat waves.", effect: { sustainability: -6, approval: -4, money: -5 } },
+          { name: "Green Alliance 🌐", message: "Your city joins a global climate agreement.", effect: { sustainability: +5, approval: +10, money: +3 } }
+        ];
+        return crises[Math.floor(Math.random() * crises.length)];
+      }
+      return null;
+    }
+
+    function maybeWeather() {
+      if (Math.random() < 0.2) {
+        const weatherEvents = [
+          { type: "Heatwave ☀️", message: "A brutal heatwave strains infrastructure.", score_mod: -4, approval_mod: -3, money_mod: -3 },
+          { type: "Torrential Rain 🌧️", message: "Flooding disrupts city systems.", score_mod: -2, approval_mod: -2, money_mod: -1 },
+          { type: "Mild Spring 🌸", message: "Pleasant weather boosts morale.", score_mod: +3, approval_mod: +4, money_mod: +2 },
+          { type: "Dust Storm 🌪️", message: "Visibility and transport disrupted.", score_mod: -3, approval_mod: -2, money_mod: -2 },
+          { type: "Cool Breeze 🍃", message: "Energy demand drops due to cool weather.", score_mod: +2, approval_mod: +1, money_mod: +1 }
+        ];
+        return weatherEvents[Math.floor(Math.random() * weatherEvents.length)];
+      }
+      return null;
+    }
+    function updateScenario() {
+      const index = year - 2025;
+      const scenario = scenarios[index];
+      document.getElementById('year').textContent = `Year: ${year}`;
+      document.getElementById('prompt').textContent = scenario.prompt;
+
+      document.querySelectorAll('.choice-button').forEach((btn, i) => {
+        const key = ['a', 'b', 'c', 'd'][i];
+        btn.textContent = `${key.toUpperCase()}) ${scenario.choices[key].text}`;
+      });
+    }
+
+    function endGame(survived) {
+      let message = "";
+      let results = [];
+
+      if (score >= 90 && money >= 70) {
+        message = "🏅 Eco Utopia – You’ve built a climate-resilient model city!";
+        results.push("Eco Champion 🏆");
+      } else if (score > 70 && approval < 20) {
+        message = "🚨 Public Revolt – Your green policies lacked public support.";
+        results.push("Unpopular Politician 👎");
+      } else if (money >= 90) {
+        message = "🤖 Tech Overload – Economic growth dominated sustainability.";
+      } else if (score >= 60 && approval >= 60 && money >= 60) {
+        message = "⚖️ Balanced Visionary – You kept all systems stable through 2075!";
+        results.push("Balanced Visionary ⚖️");
+      } else if (!survived) {
+        message = "💀 Society collapsed. Try again with better balance.";
+      } else {
+        message = "🎉 You led your people to a greener, safer 2075!";
+      }
+
+      document.getElementById('prompt').textContent = message;
+      document.querySelectorAll('.choice-button').forEach(btn => btn.style.display = 'none');
+
+      const log = document.getElementById('log');
+      if (results.length > 0) {
+        log.textContent += "\n\n🎖️ Achievements Unlocked:\n";
+        results.forEach(r => log.textContent += ` - ${r}\n`);
+      } else {
+        log.textContent += "\n\n🎖️ No achievements unlocked this time. Try again!";
+      }
+    }
+  </script>
+</body>
+</html>
